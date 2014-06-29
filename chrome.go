@@ -44,16 +44,14 @@ func loadChrome() (browsers []Browser) {
 	for i, v := range f.Entry {
 		infs[i] = v
 	}
-	//Insert raw xml
-	err = c.Insert(infs...)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//This will generate a lot of errors, should check
+	//if document already exists.
+	_ = c.Insert(infs...)
 	bc := db.C("browsers")
 	rVer := regexp.MustCompile(`\d\d\.[^\s]+`)
 	for _, v := range f.Entry {
 		if rVer.Match(v.Content) &&
-			v.Title == "Stable Channel Update" {
+			chromeWL(v.Title) {
 			b := Browser{
 				v.Title,
 				string(rVer.Find(v.Content)),
@@ -62,12 +60,27 @@ func loadChrome() (browsers []Browser) {
 			err = bc.Find(bson.M{"_id": v.Title}).One(&ex)
 			if compareVersions(ex.Version, b.Version) {
 				log.Println("Attempted Insert")
-				bc.Insert(b)
+				bc.UpsertId(v.Title, b)
 			}
 			browsers = append(browsers, b)
 		}
 	}
 	return browsers
+}
+
+var cWL = []string{
+	"Stable Channel Update",
+	"Chrome for Android Update",
+	"Chrome for iOS Update",
+}
+
+func chromeWL(s string) bool {
+	for _, w := range cWL {
+		if s == w {
+			return true
+		}
+	}
+	return false
 }
 
 func compareVersions(a, b string) bool {

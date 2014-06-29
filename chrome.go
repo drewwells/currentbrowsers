@@ -7,6 +7,9 @@ import (
 	"regexp"
 	"strings"
 
+	"appengine"
+	"appengine/urlfetch"
+
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )
@@ -23,8 +26,14 @@ type XFeed struct {
 	Id      string   `xml:"id" bson:"_id"`
 }
 
-func loadChrome() (browsers []Browser) {
-	bytes, err := ioutil.ReadFile("./default.xml")
+func loadChrome(ctx appengine.Context) (browsers []Browser) {
+	//bytes, err := ioutil.ReadFile("./default.xml")
+	client := urlfetch.Client(ctx)
+	resp, err := client.Get("https://www.blogger.com/feeds/8982037438137564684/posts/default")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	bytes, err := ioutil.ReadAll(resp.Body)
 
 	session, err := mgo.Dial("mongodb://checker:checker1@kahana.mongohq.com:10012/checker")
 

@@ -20,7 +20,7 @@ type Browser struct {
 
 func init() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", FirefoxHandler)
+	r.HandleFunc("/", IndexHandler)
 	r.HandleFunc("/check", CheckHandler)
 	http.Handle("/", r)
 }
@@ -45,8 +45,6 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
-	f := loadChrome()
-	for _, v := range f {
-		fmt.Fprintf(w, "%s: %s\n", string(v.Type), string(v.Version))
-	}
+	c := appengine.NewContext(r)
+	_, _ = loadChrome(c), loadFirefox(c)
 }

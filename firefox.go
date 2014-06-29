@@ -9,13 +9,14 @@ import (
 
 	"code.google.com/p/go-html-transform/css/selector"
 	"code.google.com/p/go-html-transform/h5"
+	"labix.org/v2/mgo/bson"
 
 	"appengine"
 	"appengine/urlfetch"
 )
 
-func loadFirefox(c appengine.Context) (browsers []Browser) {
-	client := urlfetch.Client(c)
+func loadFirefox(ctx appengine.Context) (browsers []Browser) {
+	client := urlfetch.Client(ctx)
 	resp, err := client.Get("http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/")
 	if err != nil {
 		log.Fatal(err.Error())
@@ -50,9 +51,23 @@ func loadFirefox(c appengine.Context) (browsers []Browser) {
 	vers := make([]string, i)
 	copy(vers, tvers)
 	sort.Strings(vers)
-	browsers = append(browsers, Browser{
+
+	sess := Session()
+	defer sess.Close()
+	col := sess.DB("checker").C("browsers")
+	b := Browser{
 		Type:    "Firefox Desktop",
 		Version: vers[len(vers)-1],
-	})
+	}
+	ex := Browser{}
+	err = col.Find(bson.M{"_id": b.Type}).One(&ex)
+	if err != nil || compareVersions(ex.Version, b.Version) {
+		log.Println("Attempted Insert")
+		col.UpsertId(b.Type, b)
+		browsers = append(browsers, b)
+	} else {
+		browsers = append(browsers, ex)
+	}
+
 	return browsers
 }

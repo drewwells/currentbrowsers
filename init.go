@@ -9,18 +9,18 @@ import (
 	"log"
 	"net/http"
 
-	"appengine"
-
 	"github.com/gorilla/mux"
-	"labix.org/v2/mgo/bson"
+
+	"appengine"
+	"appengine/datastore"
 )
 
 // Browser contains the necessary information for browser
 // type and release version.
 type Browser struct {
 	//Chrome Desktop, Chrome Android, Chrome iOS
-	Type    string `bson:"_id" json:"type"`
-	Version string `bson:"version" json:"version"`
+	Type    string `json:"type"`
+	Version string `json:"version"`
 }
 
 func init() {
@@ -33,16 +33,14 @@ func init() {
 // IndexHandler is responsible for listing the most
 // recent browsers.
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	sess := session()
-	defer sess.Close()
-	db := sess.DB("checker")
-	c := db.C("browsers")
-	bros := make([]Browser, 10)
-	err := c.Find(bson.M{}).All(&bros)
+	c := appengine.NewContext(r)
+	q := datastore.NewQuery("browsers")
+	var browsers []Browser
+	_, err := q.GetAll(c, &browsers)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	bs, _ := json.Marshal(bros)
+	bs, _ := json.Marshal(browsers)
 	fmt.Fprintf(w, string(bs))
 }
 

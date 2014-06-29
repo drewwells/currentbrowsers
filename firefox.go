@@ -9,14 +9,14 @@ import (
 
 	"code.google.com/p/go-html-transform/css/selector"
 	"code.google.com/p/go-html-transform/h5"
-	"labix.org/v2/mgo/bson"
 
 	"appengine"
+	"appengine/datastore"
 	"appengine/urlfetch"
 )
 
-func loadFirefox(ctx appengine.Context) (browsers []Browser) {
-	client := urlfetch.Client(ctx)
+func loadFirefox(c appengine.Context) (browsers []Browser) {
+	client := urlfetch.Client(c)
 	resp, err := client.Get("http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/")
 	if err != nil {
 		log.Fatal(err.Error())
@@ -26,7 +26,6 @@ func loadFirefox(ctx appengine.Context) (browsers []Browser) {
 		log.Fatal(err.Error())
 	}
 	n := tree.Top()
-	// Create a Chain object from a CSS selector statement
 	chn, err := selector.Selector("td > a")
 	if err != nil {
 		log.Fatal(err.Error())
@@ -51,22 +50,33 @@ func loadFirefox(ctx appengine.Context) (browsers []Browser) {
 	vers := make([]string, i)
 	copy(vers, tvers)
 	sort.Strings(vers)
-
-	sess := session()
-	defer sess.Close()
-	col := sess.DB("checker").C("browsers")
+	//The last anchor in the sorted list will be the latest version
 	b := Browser{
 		Type:    "Firefox Desktop",
 		Version: vers[len(vers)-1],
 	}
-	ex := Browser{}
-	err = col.Find(bson.M{"_id": b.Type}).One(&ex)
-	if err != nil || compareVersions(ex.Version, b.Version) {
-		log.Println("Attempted Insert")
-		col.UpsertId(b.Type, b)
+	var exs []Browser
+	q := datastore.NewQuery("browsers").
+		Filter("Type =", "Firefox Desktop")
+	_, err = q.GetAll(c, &exs)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if len(exs) == 0 || compareVersions(exs[0].Version, b.Version) {
+		key := datastore.NewKey(
+			c,
+			"browsers",
+			b.Type,
+			0,
+			nil,
+		)
+		_, err := datastore.Put(c, key, &b)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		browsers = append(browsers, b)
-	} else {
-		browsers = append(browsers, ex)
+	} else if len(exs) > 0 {
+		browsers = append(browsers, exs[0])
 	}
 
 	return browsers

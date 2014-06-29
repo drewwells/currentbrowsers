@@ -52,7 +52,7 @@ func loadFirefox(ctx appengine.Context) (browsers []Browser) {
 	copy(vers, tvers)
 	sort.Strings(vers)
 
-	sess := Session()
+	sess := session()
 	defer sess.Close()
 	col := sess.DB("checker").C("browsers")
 	b := Browser{

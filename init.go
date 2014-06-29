@@ -33,7 +33,7 @@ func init() {
 // IndexHandler is responsible for listing the most
 // recent browsers.
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	sess := Session()
+	sess := session()
 	defer sess.Close()
 	db := sess.DB("checker")
 	c := db.C("browsers")

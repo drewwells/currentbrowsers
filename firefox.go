@@ -15,7 +15,7 @@ import (
 	"appengine/urlfetch"
 )
 
-func loadFirefox(c appengine.Context) (browsers []Browser) {
+func loadFirefox(c appengine.Context) {
 	client := urlfetch.Client(c)
 	resp, err := client.Get("http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/")
 	if err != nil {
@@ -34,7 +34,6 @@ func loadFirefox(c appengine.Context) (browsers []Browser) {
 	tvers := make([]string, len(nodes))
 	rVer := regexp.MustCompile(`^\d*[\.\d*]*$`)
 	i := 0
-	_ = rVer
 	for _, v := range nodes {
 		var iv int64
 		txt := strings.TrimSuffix(v.FirstChild.Data, "/")
@@ -50,7 +49,7 @@ func loadFirefox(c appengine.Context) (browsers []Browser) {
 	vers := make([]string, i)
 	copy(vers, tvers)
 	sort.Strings(vers)
-	//The last anchor in the sorted list will be the latest version
+	//The last ele in the sorted list will be the latest version
 	b := Browser{
 		Type:    "Firefox Desktop",
 		Version: vers[len(vers)-1],
@@ -62,22 +61,18 @@ func loadFirefox(c appengine.Context) (browsers []Browser) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if len(exs) == 0 || compareVersions(exs[0].Version, b.Version) {
-		key := datastore.NewKey(
-			c,
-			"browsers",
-			b.Type,
-			0,
-			nil,
-		)
-		_, err := datastore.Put(c, key, &b)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		browsers = append(browsers, b)
-	} else if len(exs) > 0 {
-		browsers = append(browsers, exs[0])
+	if len(exs) != 0 && !compareVersions(exs[0].Version, b.Version) {
+		return
 	}
-
-	return browsers
+	key := datastore.NewKey(
+		c,
+		"browsers",
+		b.Type,
+		0,
+		nil,
+	)
+	_, err = datastore.Put(c, key, &b)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }

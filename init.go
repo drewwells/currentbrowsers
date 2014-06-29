@@ -49,10 +49,12 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 // recent browsers.
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	_, _ = loadChrome(c), loadFirefox(c)
+	loadChrome(c)
+	loadFirefox(c)
+	loadSafari(c)
 }
 
 func SafariHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	_ = loadSafari(c)
+	loadSafari(c)
 }

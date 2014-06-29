@@ -22,7 +22,7 @@ type sJSON struct {
 	Downloads []sdl
 }
 
-func loadSafari(c appengine.Context) (browsers []Browser) {
+func loadSafari(c appengine.Context) {
 	client := urlfetch.Client(c)
 	resp, err := client.Get(safariURI)
 	if err != nil {
@@ -69,7 +69,6 @@ func loadSafari(c appengine.Context) (browsers []Browser) {
 		}
 
 	}
-	return browsers
 }
 
 var safariNames = map[string]string{

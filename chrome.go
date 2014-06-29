@@ -47,7 +47,7 @@ func loadChrome(c appengine.Context) (browsers []Browser) {
 		if rVer.Match(v.Content) &&
 			chromeWL(v.Title) {
 			b := Browser{
-				v.Title,
+				chromeNames[v.Title],
 				string(rVer.Find(v.Content)),
 			}
 			var exs []Browser
@@ -81,10 +81,15 @@ var cWL = []string{
 	"Chrome for Android Update",
 	"Chrome for iOS Update",
 }
+var chromeNames = map[string]string{
+	"Stable Channel Update":     "Chrome Desktop",
+	"Chrome for Android Update": "Chrome Android",
+	"Chrome for iOS Update":     "Chrome iOS",
+}
 
 func chromeWL(s string) bool {
-	for _, w := range cWL {
-		if s == w {
+	for k, _ := range chromeNames {
+		if s == k {
 			return true
 		}
 	}

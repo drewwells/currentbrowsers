@@ -1,3 +1,6 @@
+// Currentbrowsers package attempts to find the most recent
+// versions of popular browsers.  This data is then easily
+// consumable as an API.
 package currentbrowsers
 
 import (
@@ -12,6 +15,8 @@ import (
 	"labix.org/v2/mgo/bson"
 )
 
+// Browser contains the necessary information for browser
+// type and release version.
 type Browser struct {
 	//Chrome Desktop, Chrome Android, Chrome iOS
 	Type    string `bson:"_id" json:"type"`
@@ -25,11 +30,8 @@ func init() {
 	http.Handle("/", r)
 }
 
-func FirefoxHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-	fmt.Fprintf(w, "%v", loadFirefox(c))
-}
-
+// IndexHandler is responsible for listing the most
+// recent browsers.
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	sess := Session()
 	defer sess.Close()
@@ -44,6 +46,8 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(bs))
 }
 
+// CheckHandler is responsible for refreshing the list of most
+// recent browsers.
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	_, _ = loadChrome(c), loadFirefox(c)

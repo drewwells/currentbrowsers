@@ -14,15 +14,15 @@ import (
 	"labix.org/v2/mgo/bson"
 )
 
-type XFE struct {
+type xFE struct {
 	Id      string `xml:"id"`
 	Title   string `xml:"title"`
 	Content []byte `xml:"content"`
 }
 
-type XFeed struct {
+type xFeed struct {
 	XMLName xml.Name `xml:"feed"`
-	Entry   []XFE    `xml:"entry"`
+	Entry   []xFE    `xml:"entry"`
 	Id      string   `xml:"id" bson:"_id"`
 }
 
@@ -44,7 +44,7 @@ func loadChrome(ctx appengine.Context) (browsers []Browser) {
 	c := db.C("entries")
 	defer session.Close()
 
-	f := XFeed{}
+	f := xFeed{}
 	err = xml.Unmarshal(bytes, &f)
 	if err != nil {
 		log.Fatal(err.Error())

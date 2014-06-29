@@ -1,4 +1,4 @@
-package checker
+package currentbrowsers
 
 import (
 	"encoding/xml"

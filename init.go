@@ -1,10 +1,12 @@
-package checker
+package currentbrowsers
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+
+	"appengine"
 
 	"github.com/gorilla/mux"
 	"labix.org/v2/mgo/bson"
@@ -18,9 +20,14 @@ type Browser struct {
 
 func init() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", IndexHandler)
+	r.HandleFunc("/", FirefoxHandler)
 	r.HandleFunc("/check", CheckHandler)
 	http.Handle("/", r)
+}
+
+func FirefoxHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	fmt.Fprintf(w, "%v", loadFirefox(c))
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {

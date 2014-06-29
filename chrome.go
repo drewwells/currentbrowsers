@@ -44,34 +44,37 @@ func loadChrome(c appengine.Context) (browsers []Browser) {
 	}
 	rVer := regexp.MustCompile(`\d\d\.[^\s]+`)
 	for _, v := range f.Entry {
-		if rVer.Match(v.Content) &&
-			chromeWL(v.Title) {
-			b := Browser{
-				chromeNames[v.Title],
-				string(rVer.Find(v.Content)),
-			}
-			var exs []Browser
-			q := datastore.NewQuery("browsers").
-				Filter("Type =", v.Title)
-			_, err := q.GetAll(c, &exs)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-			if len(exs) == 0 ||
-				compareVersions(exs[0].Version, b.Version) {
-				key := datastore.NewKey(
-					c,
-					"browsers",
-					v.Title,
-					0,
-					nil,
-				)
-				_, err := datastore.Put(c, key, &b)
-				if err != nil {
-					log.Fatal(err.Error())
-				}
-			}
+		if !rVer.Match(v.Content) ||
+			!chromeWL(v.Title) {
+			continue
 		}
+		b := Browser{
+			chromeNames[v.Title],
+			string(rVer.Find(v.Content)),
+		}
+		var exs []Browser
+		q := datastore.NewQuery("browsers").
+			Filter("Type =", v.Title)
+		_, err := q.GetAll(c, &exs)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		if len(exs) != 0 &&
+			!compareVersions(exs[0].Version, b.Version) {
+			continue
+		}
+		key := datastore.NewKey(
+			c,
+			"browsers",
+			chromeNames[v.Title],
+			0,
+			nil,
+		)
+		_, err = datastore.Put(c, key, &b)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
 	}
 	return browsers
 }

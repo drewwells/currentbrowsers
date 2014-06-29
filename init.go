@@ -27,6 +27,7 @@ func init() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", IndexHandler)
 	r.HandleFunc("/check", CheckHandler)
+	r.HandleFunc("/safari", SafariHandler)
 	http.Handle("/", r)
 }
 
@@ -49,4 +50,9 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	_, _ = loadChrome(c), loadFirefox(c)
+}
+
+func SafariHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	_ = loadSafari(c)
 }
